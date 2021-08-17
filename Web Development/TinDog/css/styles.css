@@ -90,7 +90,6 @@ margin: 5% 3% 5% 0;
 /* Testimonial Section */
 
 #testimonials {
-  padding: 7% 15%;
   text-align: center;
   background-color: #ef8172;
   color: #fff;
@@ -102,6 +101,10 @@ margin: 5% 3% 5% 0;
   margin: 20px;
 }
 
+.carousel-item {
+  padding: 7% 15%;
+
+}
 
 
 #press {
