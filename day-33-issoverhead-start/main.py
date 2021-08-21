@@ -8,8 +8,8 @@ import time
 MY_LAT = 14.537752
 MY_LONG = 121.001381
 
-my_email = "ryan.salvanera@gmail.com"
-password = "B@dB0y34"
+my_email = YourEmail
+password = YourPassword
 
 
 def _is_iss_overhead():
@@ -20,9 +20,9 @@ def _is_iss_overhead():
     iss_latitude = float(data["iss_position"]["latitude"])
     iss_longitude = float(data["iss_position"]["longitude"])
 
-    #Your position is within +5 or -5 degrees of the ISS position.
+    # Your position is within +5 or -5 degrees of the ISS position.
 
-    if MY_LAT-5 <= iss_latitude <= MY_LAT+5 and MY_LONG-5 <= iss_longitude <= MY_LONG+5:
+    if MY_LAT - 5 <= iss_latitude <= MY_LAT + 5 and MY_LONG - 5 <= iss_longitude <= MY_LONG + 5:
         return True
 
 
@@ -33,7 +33,8 @@ def is_night():
         "formatted": 0,
     }
 
-    response = requests.get("https://api.sunrise-sunset.org/json", params=parameters)
+    response = requests.get(
+        "https://api.sunrise-sunset.org/json", params=parameters)
     response.raise_for_status()
     data = response.json()
     sunrise = int(data["results"]["sunrise"].split("T")[1].split(":")[0])
@@ -60,4 +61,3 @@ while True:
                 from_addr=my_email,
                 to_addrs=my_email,
                 msg=f"Subject:Look Up ☝🏼\n\nThe ISS is above you in the sky.")
-
