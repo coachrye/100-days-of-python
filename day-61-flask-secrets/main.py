@@ -2,6 +2,7 @@ from flask import Flask, render_template
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import DataRequired, Email, Length
+from flask_bootstrap import Bootstrap
 
 
 class LoginForm(FlaskForm):
@@ -9,8 +10,14 @@ class LoginForm(FlaskForm):
     password = PasswordField(label='Password', validators=[DataRequired(), Length(min=8)])
     submit = SubmitField(label="Log In")
 
+def create_app():
+    app = Flask(__name__)
+    Bootstrap(app)
 
-app = Flask(__name__)
+    return app
+
+
+app = create_app()
 app.secret_key = "any-string-you-want-just-keep-it-secret"
 
 
