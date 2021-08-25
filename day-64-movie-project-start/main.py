@@ -52,10 +52,12 @@ def home():
     all_movies = Movie.query.all()
     return render_template("index.html", movies=all_movies)
 
+
 class RateMovieForm(FlaskForm):
     rating = StringField("Your Rating Out of 10 e.g. 7.5")
     review = StringField("Your Review")
     submit = SubmitField("Done")
+
 
 @app.route("/edit", methods=["GET", "POST"])
 def rate_movie():
@@ -69,6 +71,14 @@ def rate_movie():
         return redirect(url_for('home'))
     return render_template("edit.html", movie=movie, form=form)
 
+
+@app.route("/delete")
+def delete_movie():
+    movie_id = request.args.get("id")
+    movie = Movie.query.get(movie_id)
+    db.session.delete(movie)
+    db.session.commit()
+    return redirect(url_for('home'))
 
 if __name__ == '__main__':
     app.run(debug=True)
