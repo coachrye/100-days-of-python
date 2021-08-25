@@ -80,5 +80,34 @@ def delete_movie():
     db.session.commit()
     return redirect(url_for('home'))
 
+
+class AddMovieForm(FlaskForm):
+    title = StringField("Title")
+    submit = SubmitField("Add Movie")
+
+
+@app.route("/add", methods=["GET", "POST"])
+def add_movie():
+    form = AddMovieForm()
+    if form.validate_on_submit():
+        # print(form.title.data)
+        # # db.session.commit()
+        # TMDB_API_KEY = "d2cb7df44af2cd6f88a3794e0f29decc"
+        # tmdb_search = "https://api.themoviedb.org/3/search/movie?api_key=" + TMDB_API_KEY \
+        #               + "language=en-US&query=" + form.title.data \
+        #               + "&page=1&include_adult=false"
+        # print(tmdb_search)
+        # response = requests.get(url=tmdb_search)
+        # print(response.json()["results"])
+        # return redirect(url_for('home'))
+        MOVIE_DB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
+        MOVIE_DB_API_KEY = "d2cb7df44af2cd6f88a3794e0f29decc"
+        movie_title = form.title.data
+        response = requests.get(MOVIE_DB_SEARCH_URL, params={"api_key": MOVIE_DB_API_KEY, "query": movie_title})
+        data = response.json()["results"]
+        return render_template("select.html", options=data)
+    return render_template("add.html", form=form)
+
+
 if __name__ == '__main__':
     app.run(debug=True)
