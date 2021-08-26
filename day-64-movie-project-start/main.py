@@ -6,6 +6,11 @@ from wtforms import StringField, SubmitField
 from wtforms.validators import DataRequired
 import requests
 
+MOVIE_DB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
+MOVIE_DB_GET_DETAIL_URL = "https://api.themoviedb.org/3/movie/"
+MOVIE_DB_IMAGE_URL = "https://image.tmdb.org/t/p/w500"
+MOVIE_DB_API_KEY = "d2cb7df44af2cd6f88a3794e0f29decc"
+
 app = Flask(__name__)
 app.config['SECRET_KEY'] = '8BYkEfBA6O6donzWlSihBXox7C0sKR6b'
 Bootstrap(app)
@@ -14,17 +19,17 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///top-movies.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
+
 ##CREATE TABLE
 class Movie(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String(250), unique=True, nullable=False)
     year = db.Column(db.Integer, nullable=False)
     description = db.Column(db.String(250), nullable=False)
-    rating = db.Column(db.Float, nullable=False)
-    ranking = db.Column(db.Integer, nullable=False)
-    review = db.Column(db.String(250), nullable=False)
-    img_url = db.Column(db.String(250), nullable=False)
-
+    rating = db.Column(db.Float, nullable=True)
+    ranking = db.Column(db.Integer, nullable=True)
+    review = db.Column(db.String(250), nullable=True)
+    img_url = db.Column(db.String(250), nullable=True)
 
     # Optional: this will allow each book object to be identified by its title when printed.
     def __repr__(self):
@@ -49,7 +54,13 @@ db.create_all()
 
 @app.route("/")
 def home():
-    all_movies = Movie.query.all()
+    all_movies = Movie.query.order_by(Movie.rating).all()
+
+    #This line loops through all the movies
+    for i in range(len(all_movies)):
+        #This line gives each movie a new ranking reversed from their order in all_movies
+        all_movies[i].ranking = len(all_movies) - i
+    db.session.commit()
     return render_template("index.html", movies=all_movies)
 
 
@@ -90,23 +101,41 @@ class AddMovieForm(FlaskForm):
 def add_movie():
     form = AddMovieForm()
     if form.validate_on_submit():
-        # print(form.title.data)
-        # # db.session.commit()
-        # TMDB_API_KEY = "d2cb7df44af2cd6f88a3794e0f29decc"
-        # tmdb_search = "https://api.themoviedb.org/3/search/movie?api_key=" + TMDB_API_KEY \
-        #               + "language=en-US&query=" + form.title.data \
-        #               + "&page=1&include_adult=false"
-        # print(tmdb_search)
-        # response = requests.get(url=tmdb_search)
-        # print(response.json()["results"])
-        # return redirect(url_for('home'))
-        MOVIE_DB_SEARCH_URL = "https://api.themoviedb.org/3/search/movie"
-        MOVIE_DB_API_KEY = "d2cb7df44af2cd6f88a3794e0f29decc"
         movie_title = form.title.data
         response = requests.get(MOVIE_DB_SEARCH_URL, params={"api_key": MOVIE_DB_API_KEY, "query": movie_title})
         data = response.json()["results"]
         return render_template("select.html", options=data)
     return render_template("add.html", form=form)
+
+
+@app.route("/find")
+def get_details():
+    movie_id = request.args.get("movie_id")
+    # response = requests.get(MOVIE_DB_GET_DETAIL_URL, params={"api_key": MOVIE_DB_API_KEY, "movie_id": movie_id})
+    # data = response.json()
+    # print(data)
+
+    movie_api_url = f"{MOVIE_DB_GET_DETAIL_URL}/{movie_id}"
+    # The language parameter is optional, if you were making the website for a different audience
+    # e.g. Hindi speakers then you might choose "hi-IN"
+    response = requests.get(movie_api_url, params={"api_key": MOVIE_DB_API_KEY, "language": "en-US"})
+    data = response.json()
+
+    new_movie = Movie(
+        title=data["title"],
+        # The data in release_date includes month and day, we will want to get rid of.
+        year=data["release_date"].split("-")[0],
+        img_url=f"{MOVIE_DB_IMAGE_URL}{data['poster_path']}",
+        description=data["overview"]
+    )
+    db.session.add(new_movie)
+    db.session.commit()
+
+    return redirect(url_for('rate_movie', id=new_movie.id))
+
+    # form = RateMovieForm()
+    # movie = Movie.query.get(movie_id)
+    # return render_template("edit.html", movie=movie, form=form)
 
 
 if __name__ == '__main__':
