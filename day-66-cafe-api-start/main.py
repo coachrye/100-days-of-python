@@ -88,7 +88,6 @@ def get_random_cafe():
 def get_all_cafes():
     all_cafes = db.session.query(Cafe).all()
     return jsonify(cafes=[cafe.to_dict() for cafe in all_cafes])
-
     # all_cafes_dict = []
     # for cafe in all_cafes:
     #     print(cafe.to_dict())
@@ -97,6 +96,16 @@ def get_all_cafes():
     # #Simply convert the random_cafe data record to a dictionary of key-value pairs.
     # return jsonify(cafes=all_cafes_dict)
 
+
+@app.route("/search")
+def search():
+    query_location = request.args.get("loc")
+    cafe = db.session.query(Cafe).filter_by(location=query_location).first()
+    # return jsonify(cafes=[cafe.to_dict() for cafe in result])
+    if cafe:
+        return jsonify(cafe=cafe.to_dict())
+    else:
+        return jsonify(error={"Not Found": "Sorry, we don't have a cafe at that location."})
 
 ## HTTP POST - Create Record
 
