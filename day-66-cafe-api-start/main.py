@@ -83,6 +83,21 @@ def get_random_cafe():
     #     }
     # })
 
+
+@app.route("/all")
+def get_all_cafes():
+    all_cafes = db.session.query(Cafe).all()
+    return jsonify(cafes=[cafe.to_dict() for cafe in all_cafes])
+
+    # all_cafes_dict = []
+    # for cafe in all_cafes:
+    #     print(cafe.to_dict())
+    #     all_cafes_dict.append(cafe.to_dict())
+    # print(all_cafes_dict)
+    # #Simply convert the random_cafe data record to a dictionary of key-value pairs.
+    # return jsonify(cafes=all_cafes_dict)
+
+
 ## HTTP POST - Create Record
 
 ## HTTP PUT/PATCH - Update Record
