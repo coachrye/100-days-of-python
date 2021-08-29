@@ -6,7 +6,9 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from flask_sqlalchemy import SQLAlchemy
 from sqlalchemy.orm import relationship
 from flask_login import UserMixin, login_user, LoginManager, login_required, current_user, logout_user
-from forms import CreatePostForm
+
+import forms
+from forms import CreatePostForm, RegisterForm
 from flask_gravatar import Gravatar
 
 app = Flask(__name__)
@@ -31,7 +33,15 @@ class BlogPost(db.Model):
     date = db.Column(db.String(250), nullable=False)
     body = db.Column(db.Text, nullable=False)
     img_url = db.Column(db.String(250), nullable=False)
-db.create_all()
+
+
+class User(UserMixin, db.Model):
+    __tablename__ = "users"
+    id = db.Column(db.Integer, primary_key=True)
+    email = db.Column(db.String(100), unique=True)
+    password = db.Column(db.String(100))
+    name = db.Column(db.String(1000))
+# db.create_all()
 
 
 @app.route('/')
@@ -40,9 +50,40 @@ def get_all_posts():
     return render_template("index.html", all_posts=posts)
 
 
-@app.route('/register')
+@app.route('/register', methods=["GET", "POST"])
 def register():
-    return render_template("register.html")
+    register_form = RegisterForm()
+    if register_form.validate_on_submit():
+
+        # Check Existing Email
+        if User.query.filter_by(email=register_form.email.data).first():
+
+            # User already exists
+            flash("You've already signed up with that email, log in instead!")
+            return redirect(url_for('login'))
+
+        # Hash Them
+        hash_and_salted_password = generate_password_hash(
+            register_form.password.data,
+            method='pbkdf2:sha256',
+            salt_length=8
+        )
+
+        # Save Them
+        new_user = User(
+            email=register_form.email.data,
+            name=register_form.name.data,
+            password=hash_and_salted_password
+        )
+
+        db.session.add(new_user)
+        db.session.commit()
+
+        login_user(new_user)
+
+        return redirect(url_for("get_all_posts"))
+
+    return render_template("register.html", form=register_form)
 
 
 @app.route('/login')
